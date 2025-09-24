@@ -10,10 +10,15 @@ class GCNLayer(nn.Module):
         self.act = nn.ReLU()
 
     def forward(self, H: torch.Tensor, A_hat: torch.Tensor) -> torch.Tensor:
-        # H: [N, F], A_hat: [N, N]
+        # Supports H shaped [N, F] or [B, N, F]; A_hat is [N, N]
         H = self.dropout(H)
-        H = A_hat @ H
-        H = self.lin(H)
+        if H.dim() == 2:
+            H = A_hat @ H                  # [N, F]
+            H = self.lin(H)                # [N, out]
+        else:
+            # Broadcast A_hat over batch: result [B, N, F]
+            H = torch.matmul(A_hat, H)     # [B, N, F]
+            H = self.lin(H)                # [B, N, out]
         return self.act(H)
 
 class TemporalConv(nn.Module):
@@ -29,7 +34,7 @@ class TemporalConv(nn.Module):
         x = x.reshape(B*N, F, T)       # [B*N, F, T]
         x = self.conv(x)               # [B*N, H, T]
         x = self.act(x)
-        x = x[:, :, -1]                # take last timestep -> [B*N, H]
+        x = x[:, :, -1]                # [B*N, H]
         x = x.reshape(B, N, -1)        # [B, N, H]
         return x
 
@@ -47,17 +52,13 @@ class STGCN(nn.Module):
 
     def forward(self, x: torch.Tensor, A_hat: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         # x: [B, T, N, F]
-        H = self.temporal(x)  # [B, N, Ht]
-        B, N, Ht = H.shape
-        out = H
-        A = A_hat
+        out = self.temporal(x)  # [B, N, Ht]
         for layer in self.gcn:
-            out = layer(out.reshape(-1, out.shape[-1]), A).reshape(B, N, -1)
+            out = layer(out, A_hat)   # keep [B, N, *] shape
         mean = self.head_mean(out).squeeze(-1)     # [B, N]
         logvar = self.head_logvar(out).squeeze(-1) # [B, N]
         return mean, logvar
 
 def gaussian_nll(mean: torch.Tensor, logvar: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-    # mean/logvar: [B, N], target: [B, N]
     var = torch.exp(logvar).clamp_min(1e-6)
     return 0.5 * (torch.log(var) + (target - mean)**2 / var)

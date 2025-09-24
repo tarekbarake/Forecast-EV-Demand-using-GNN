@@ -37,7 +37,7 @@ def train(config_path: str):
         dropout=cfg["model"]["dropout"]
     ).to(device)
 
-    opt = torch.optim.Adam(model.parameters(), lr=cfg["train"]["lr"])
+    opt = torch.optim.Adam(model.parameters(), lr=float(cfg["train"]["lr"]))
 
     best_val = math.inf
     for epoch in range(cfg["train"]["epochs"]):

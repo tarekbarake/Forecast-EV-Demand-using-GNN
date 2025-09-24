@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.so
+
+# Virtual env
+.venv/
+
+# Build/Dist
+build/
+dist/
+
+# Local data & outputs
+data/
+artifacts/
+
+# OS/editor
+.DS_Store
+*.bak
