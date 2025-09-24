@@ -1,0 +1,27 @@
+# Default config
+paths:
+  nodes: data/synth/nodes.csv
+  edges: data/synth/edges.csv
+  timeseries: data/synth/timeseries.csv
+  artifacts_dir: artifacts
+
+model:
+  in_features: 8     # excluding usage_kw (target), include engineered features
+  time_window: 24    # use last 24 hours
+  gcn_hidden: 64
+  gcn_layers: 2
+  temporal_hidden: 64
+  dropout: 0.1
+
+train:
+  seed: 42
+  epochs: 10
+  batch_size: 32
+  lr: 1e-3
+  val_split: 0.2
+
+forecast:
+  horizon: 24
+
+selection:
+  equity_weight: 0.0 # set >0 to upweight underserved
