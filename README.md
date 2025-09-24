@@ -47,5 +47,3 @@ See `configs/default.yaml` for file paths and hyperparameters.
 - `artifacts/forecasts.csv`: per-node P50/P90 demand and queue risk
 - `artifacts/ranked_candidates.csv`: sorted list with accessibility and ROI proxies
 
-## License
-MIT
